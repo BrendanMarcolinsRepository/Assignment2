@@ -1,3 +1,4 @@
+
 package com.company;
 
 import java.io.File;
@@ -9,6 +10,7 @@ class Record
 {
     float arrival;
     float departure;
+    int count = 0;
 
     public void setDeparture(float departure)
     {
@@ -30,6 +32,10 @@ class Record
         return arrival;
     }
 
+    public int getCount()
+    {
+        return count;
+    }
 
     public String display()
     {
@@ -47,12 +53,16 @@ class Queue
     int size  = 0;
     int front = 0;
     int rear = 0;
+    int quereLength = 0;
+    int prevLength = 0;
 
     public void in(Record data)
     {
         array[rear] = data;
         rear++;
         size++;
+        quereLength++;
+        System.out.println("Current Length " + rear);
     }
 
     public boolean isEmpty()
@@ -76,10 +86,50 @@ class Queue
         {
             return 0;
         }
+        System.out.println("Customer: "+ array[0].getCount());
         float d  = array[0].departure;
+        System.out.println("Customer: dep"+ d);
         for(int i = 0; i < rear - 1; i++)
         {
             array[i] = array[i+1];
+        }
+
+        if(quereLength > prevLength)
+        {
+            prevLength = quereLength;
+            quereLength = 0;
+        }
+
+
+
+        array[rear-1] = null;
+        rear--;
+        return d;
+
+    }
+
+    public int  getQuereLength()
+    {
+        return prevLength;
+    }
+
+    public float release()
+    {
+        Record data = array[front];
+        if(array[0]==null)
+        {
+            return 0;
+        }
+        float d  =  array[0].departure;
+        for(int i = 0; i < rear - 1; i++)
+        {
+            array[i] = array[i+1];
+        }
+
+        if(quereLength > prevLength)
+        {
+            prevLength = quereLength;
+            quereLength = 0;
         }
 
         array[rear-1] = null;
@@ -87,6 +137,7 @@ class Queue
         return d;
 
     }
+
 
 
     public void out()
@@ -101,9 +152,9 @@ class Queue
         int count = 1;
         for(Record i : array)
         {
-                if(i != null)
+            if(i != null)
                 System.out.println("Customer: " + count + "\n"  + i.display());
-                count++;
+            count++;
         }
     }
 
@@ -119,16 +170,16 @@ public class Main
 
     static class Servers
     {
-        
+
         public static void process(float next_service,float next_arrival, float time,Record record)
         {
 
             if(busy == true)
             {
-                getFUckedUowWanqingKING();
+
                 if(serviceEnd < next_service)
                 {
-                    service();
+                    service(record);
                     System.out.println("1");
                 }
                 else
@@ -159,7 +210,7 @@ public class Main
             else
             {
                 busy = true;
-                serviceEnd += time + nextServices;
+                serviceEnd = time + nextServices;
                 System.out.println("here "+serviceEnd);
                 System.out.println("5");
 
@@ -167,7 +218,7 @@ public class Main
             }
         }
 
-        public static void service()
+        public static void service(Record record)
         {
             float time = serviceEnd;
             if(queue.isEmpty())
@@ -177,19 +228,22 @@ public class Main
             }
             else
             {
-                serviceEnd += time + queue.dequeue();
+                serviceEnd = time + queue.dequeue();
+                queue.in(record);
                 System.out.println("7");
             }
         }
 
         public static void getFUckedUowWanqingKING()
         {
+            float time = serviceEnd;
+
             if(!queue.isEmpty())
             {
                 System.out.println("8");
-                float i = queue.dequeue();
+                float i = queue.release();
                 System.out.println(i);
-                serviceEnd += i;
+                serviceEnd = time + i;
                 System.out.println(serviceEnd);
 
             }
@@ -214,13 +268,14 @@ public class Main
 
 
 
-
+        int customerCount = 0;
         int count = 1;
         while(scanner.hasNextFloat())
         {
             float data = scanner.nextFloat();
             if(count <= 2)
             {
+
                 if(count == 1)
                 {
                     record.arrival = data;
@@ -233,17 +288,26 @@ public class Main
                     count = 1;
                     System.out.println(record.getArrival() + "  " + record.getDeparture());
                     Servers.process(record.getArrival(), record.getDeparture(), time,record);
+                    record.count = customerCount;
                     record = new Record();
                     System.out.println("Service : " + serviceEnd);
 
 
                 }
             }
+
+            customerCount++;
         }
 
         queue.display();
 
+        while(!queue.isEmpty())
+        {
+            Servers.getFUckedUowWanqingKING();
+        }
+
         System.out.println("Service : " + serviceEnd);
+        System.out.println("Queue Length : " + queue.getQuereLength());
 
 
     }
